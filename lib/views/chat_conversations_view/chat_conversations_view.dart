@@ -11,7 +11,7 @@ class ChatConversationsController extends ChatBaseController {
   });
 
   final ValueNotifier<List<ChatConversation>> _listValueNotifier =
-      ValueNotifier([]);
+  ValueNotifier([]);
 
   final ValueNotifier<int> _totalUnreadCountNotifier = ValueNotifier(0);
 
@@ -76,7 +76,7 @@ class ChatConversationsController extends ChatBaseController {
   /// load all conversations and refresh the list.
   Future<void> loadAllConversations() async {
     List<ChatConversation> list =
-        await ChatClient.getInstance.chatManager.loadAllConversations();
+    await ChatClient.getInstance.chatManager.loadAllConversations();
     conversationList = await sortHandle?.call(list) ?? list;
   }
 
@@ -100,9 +100,9 @@ class ChatConversationsController extends ChatBaseController {
     List<ChatConversation> list = conversationList;
     await Future.wait(list
         .map((element) => ChatClient.getInstance.chatManager.deleteConversation(
-              element.id,
-              deleteMessages: includeMessage,
-            ))).then((value) => conversationList = []);
+      element.id,
+      deleteMessages: includeMessage,
+    ))).then((value) => conversationList = []);
     if (includeMessage) {
       _totalUnreadCountNotifier.value = 0;
     }
@@ -117,7 +117,7 @@ class ChatConversationsController extends ChatBaseController {
   /// Mark a conversation as read
   Future<void> markConversationAsRead(String conversationId) async {
     int index =
-        conversationList.indexWhere((element) => element.id == conversationId);
+    conversationList.indexWhere((element) => element.id == conversationId);
     if (index != -1) {
       ChatConversation tmp = conversationList[index];
       await tmp.markAllMessagesAsRead();
@@ -194,8 +194,9 @@ class ChatConversationsView extends StatefulWidget {
     this.nicknameBuilder,
     this.backgroundWidgetWhenListEmpty,
     this.enablePullReload = false,
+    this.contentPadding,
   }) : conversationsController =
-            conversationsController ?? ChatConversationsController();
+      conversationsController ?? ChatConversationsController();
 
   /// The conversations controller.
   final ChatConversationsController conversationsController;
@@ -256,6 +257,9 @@ class ChatConversationsView extends StatefulWidget {
 
   /// Enable pull down reload.
   final bool? enablePullReload;
+
+  /// Padding content
+  final EdgeInsets? contentPadding;
 
   @override
   State<ChatConversationsView> createState() => ChatConversationsViewState();
@@ -331,9 +335,10 @@ class ChatConversationsViewState extends State<ChatConversationsView> {
         primary: widget.primary,
         reverse: widget.reverse,
         slivers: [
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
+          SliverPadding(
+            padding: widget.contentPadding ?? EdgeInsets.zero,
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
                 ChatConversation conversation = _tmpList[index];
                 return widget.itemBuilder?.call(context, index, conversation) ??
                     ChatSwipeWidget(
@@ -342,10 +347,8 @@ class ChatConversationsViewState extends State<ChatConversationsView> {
                         ChatSwipeItem(
                           dismissed: (bool dismissed) async {
                             if (dismissed) {
-                              {
-                                await widget.conversationsController
-                                    .deleteConversationWithId(conversation.id);
-                              }
+                              await widget.conversationsController
+                                  .deleteConversationWithId(conversation.id);
                             }
                           },
                           backgroundColor: Colors.red,
@@ -368,10 +371,10 @@ class ChatConversationsViewState extends State<ChatConversationsView> {
                             ];
 
                             return await showChatBottomSheet(
-                                  context: context,
-                                  title: 'Delete conversation',
-                                  items: list,
-                                ) ??
+                              context: context,
+                              title: 'Delete conversation',
+                              items: list,
+                            ) ??
                                 false;
                           },
                         ),
@@ -380,7 +383,7 @@ class ChatConversationsViewState extends State<ChatConversationsView> {
                         color: Colors.white,
                         child: ChatConversationListTile(
                           avatar: widget.avatarBuilder
-                                  ?.call(context, conversation) ??
+                              ?.call(context, conversation) ??
                               ChatImageLoader.defaultAvatar(size: 50),
                           title: widget.nicknameBuilder
                               ?.call(context, conversation),
@@ -392,15 +395,16 @@ class ChatConversationsViewState extends State<ChatConversationsView> {
                       ),
                     );
               },
-              semanticIndexCallback: (Widget _, int index) => index,
-              findChildIndexCallback: (key) {
-                final ValueKey<String> valueKey = key as ValueKey<String>;
-                int index = _tmpList.indexWhere(
-                    (conversation) => conversation.id == valueKey.value);
+                semanticIndexCallback: (Widget _, int index) => index,
+                findChildIndexCallback: (key) {
+                  final ValueKey<String> valueKey = key as ValueKey<String>;
+                  int index = _tmpList.indexWhere(
+                          (conversation) => conversation.id == valueKey.value);
 
-                return index > -1 ? index : null;
-              },
-              childCount: _tmpList.length,
+                  return index > -1 ? index : null;
+                },
+                childCount: _tmpList.length,
+              ),
             ),
           )
         ],
